@@ -1,0 +1,137 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role and salon association",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "staff", "receptionist"] },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Client": {
+      "title": "Client",
+      "description": "Beauty salon client information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "Service": {
+      "title": "Service",
+      "description": "Salon services offered",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "duration": { "type": "number", "description": "Duration in minutes" },
+        "category": { "type": "string" }
+      },
+      "required": ["name", "price", "duration"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Scheduled appointments",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "serviceId": { "type": "string" },
+        "serviceName": { "type": "string" },
+        "staffId": { "type": "string" },
+        "staffName": { "type": "string" },
+        "startTime": { "type": "string", "format": "date-time" },
+        "endTime": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "completed", "cancelled"] },
+        "totalPrice": { "type": "number" },
+        "notes": { "type": "string" }
+      },
+      "required": ["clientId", "serviceId", "staffId", "startTime", "status"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Inventory products",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "stock": { "type": "number" },
+        "minStock": { "type": "number" },
+        "category": { "type": "string" }
+      },
+      "required": ["name", "price", "stock"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Sales invoices or receipts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "appointmentId": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["cash", "card", "transfer"] },
+        "status": { "type": "string", "enum": ["paid", "pending", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["total", "paymentMethod", "status"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Salon expenses",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["description", "amount", "date"]
+    },
+    "Promotion": {
+      "title": "Promotion",
+      "description": "Active promotions and discounts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "discountType": { "type": "string", "enum": ["percentage", "fixed"] },
+        "discountValue": { "type": "number" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["name", "discountType", "discountValue", "active"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": { "schema": "User", "description": "User profiles" },
+    "/clients/{clientId}": { "schema": "Client", "description": "Client records" },
+    "/services/{serviceId}": { "schema": "Service", "description": "Salon services" },
+    "/appointments/{appointmentId}": { "schema": "Appointment", "description": "Booking records" },
+    "/products/{productId}": { "schema": "Product", "description": "Inventory items" },
+    "/invoices/{invoiceId}": { "schema": "Invoice", "description": "Sales records" },
+    "/expenses/{expenseId}": { "schema": "Expense", "description": "Expense records" },
+    "/promotions/{promotionId}": { "schema": "Promotion", "description": "Promotional offers" }
+  }
+}

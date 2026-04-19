@@ -1,0 +1,171 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: uid, email, displayName, role (admin|staff|receptionist), createdAt
+    //
+    // Collection: clients
+    // Fields: id, name, email, phone, notes, createdAt
+    //
+    // Collection: services
+    // Fields: id, name, description, price, duration, category
+    //
+    // Collection: appointments
+    // Fields: id, clientId, clientName, serviceId, serviceName, staffId, staffName, startTime, endTime, status, totalPrice, notes
+    //
+    // Collection: products
+    // Fields: id, name, description, price, stock, minStock, category
+    //
+    // Collection: invoices
+    // Fields: id, appointmentId, clientId, clientName, items, total, paymentMethod, status, createdAt
+    //
+    // Collection: expenses
+    // Fields: id, description, amount, category, date
+    //
+    // Collection: promotions
+    // Fields: id, name, description, discountType, discountValue, startDate, endDate, active
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "miguelcodev302@gmail.com" && request.auth.token.email_verified == true) ||
+         (request.auth.token.email == "admin@salon.com"));
+    }
+
+    function isStaff() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'staff', 'receptionist'] ||
+         (request.auth.token.email == "miguelcodev302@gmail.com" && request.auth.token.email_verified == true) ||
+         (request.auth.token.email == "admin@salon.com"));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // Domain Validators
+
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'photoURL', 'createdAt']) &&
+             data.uid is string && data.email is string && isValidEmail(data.email) &&
+             data.role in ['admin', 'staff', 'receptionist'];
+    }
+
+    function isValidClient(data) {
+      return hasRequiredFields(['name']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100;
+    }
+
+    function isValidService(data) {
+      return hasRequiredFields(['name', 'price', 'duration']) &&
+             data.name is string && data.price is number && data.price >= 0 &&
+             data.duration is number && data.duration > 0;
+    }
+
+    function isValidAppointment(data) {
+      return hasRequiredFields(['clientId', 'serviceId', 'staffId', 'startTime', 'status']) &&
+             data.status in ['pending', 'confirmed', 'completed', 'cancelled'];
+    }
+
+    function isValidProduct(data) {
+      return hasRequiredFields(['name', 'price', 'stock']) &&
+             data.name is string && data.price is number && data.stock is number;
+    }
+
+    function isValidInvoice(data) {
+      return hasRequiredFields(['total', 'paymentMethod', 'status']) &&
+             data.total is number && data.paymentMethod in ['cash', 'card', 'transfer'] &&
+             data.status in ['paid', 'pending', 'cancelled'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && (isOwner(userId) || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && (isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role));
+      allow delete: if isAdmin();
+    }
+
+    match /clients/{clientId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff() && isValidClient(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /services/{serviceId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin() && isValidService(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /appointments/{appointmentId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff() && isValidAppointment(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /products/{productId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff() && isValidProduct(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /invoices/{invoiceId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff() && isValidInvoice(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /expenses/{expenseId} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /promotions/{promotionId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

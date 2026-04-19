@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,700;1,900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Playfair Display", serif;
+  --font-serif: "Georgia", serif;
+  
+  --color-gold: #D4AF37;
+  --color-dark-bg: #0F0F0F;
+  --color-card-bg: #161616;
+  --color-stat-bg: #1C1C1C;
+  --color-border: #2A2A2A;
+  --color-ink: #E0E0E0;
+  --color-muted: #666666;
+  --color-secondary: #A0A0A0;
+}
+
+@layer base {
+  body {
+    @apply bg-dark-bg text-ink font-sans antialiased;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border rounded-full hover:bg-muted transition-colors;
+}
+
+.card-title-style {
+  @apply text-[11px] text-secondary uppercase tracking-[1px] mb-4 border-b border-[#222] pb-2 flex justify-between items-center font-bold;
+}
+
+.btn-elegant {
+  @apply px-4 py-2 border border-gold text-gold rounded-md cursor-pointer text-center text-xs transition-all hover:bg-gold hover:text-black;
+}
+
+.btn-elegant-fill {
+  @apply px-4 py-2 bg-gold text-black rounded-md cursor-pointer text-center text-xs font-bold transition-all hover:opacity-90;
+}
+
